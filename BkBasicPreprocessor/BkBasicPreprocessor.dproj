@@ -90,7 +90,6 @@
         <Manifest_File>(None)</Manifest_File>
         <AppDPIAwarenessMode>none</AppDPIAwarenessMode>
         <DCC_DcuOutput>.\$(Platform)\$(Config)</DCC_DcuOutput>
-        <DCC_UnitSearchPath>..\classes;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
     </PropertyGroup>
     <ItemGroup>
         <DelphiCompile Include="$(MainSource)">
@@ -98,6 +97,7 @@
         </DelphiCompile>
         <DCCReference Include="..\classes\LineNumerator.pas"/>
         <DCCReference Include="..\classes\Optional.pas"/>
+        <DCCReference Include="..\classes\SourceEncodings.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

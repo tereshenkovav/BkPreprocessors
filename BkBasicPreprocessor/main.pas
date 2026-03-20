@@ -1,7 +1,7 @@
 ﻿unit main ;
 
 interface
-uses SysUtils, Classes ;
+uses SysUtils, Classes, Optional ;
 
 type
   TDefBlockState = (dbsNone,dbsThen,dbsElse) ;
@@ -9,7 +9,7 @@ type
 
   TMain = class
   private
-    srcenc:TEncoding ;
+    srcenc:TOptional<TEncoding> ;
     autonumlines:Boolean ;
     function StripCommentFromLine(const line:string):string ;
     function GetDefineCommandFromLine(const line:string; var defname:string):TDefBlockCommand ;
@@ -21,13 +21,14 @@ type
   end;
 
 implementation
-uses Generics.Collections, Math, LineNumerator, Optional, Version ;
+uses Generics.Collections, Math, LineNumerator, Version,
+  SourceEncodings ;
 
 const MAINHELP = 'Preprocessor for BK-0010 Basic'#13#10+
   'Version: '+TGitVersion.TAG+#13#10+
   'Usage: input_file output_file [parameters]'#13#10+
   'Parameters:'#13#10+
-  '/codepage=utf8|win1251|koi8r|oem866 - Basic file codepage'#13#10+
+  '/codepage='+NAME_UTF8+'|'+NAME_WIN1251+'|'+NAME_KOI8R+'|'+NAME_OEM866+' - input and output codepage'#13#10+
   '/autonumlines=true|false - set line numbers to non-numbered Basic source'#13#10+
   '/define=name - set name for ''$IFDEF directive' ;
 
@@ -101,21 +102,13 @@ begin
       if p=-1 then ExitWithError('Unknown argument: '+ParamStr(i)+', use /name=value',3) ;
       pname:=ParamStr(i).Substring(1,p-1) ;
       pvalue:=ParamStr(i).Substring(p+1).ToLower() ;
-      if pname='codepage' then begin
-        if (pvalue<>'utf8') and (pvalue<>'win1251') and
-           (pvalue<>'koi8r') and (pvalue<>'oem866')  then
-          ExitWithError('Unknown codepage: '+pvalue,4) ;
-        if pvalue='win1251' then srcenc:=TEncoding.GetEncoding(1251) ;
-        if pvalue='oem866' then srcenc:=TEncoding.GetEncoding(866) ;
-        if pvalue='koi8r' then srcenc:=TEncoding.GetEncoding(20866) ;
-      end
-      else
-      if pname='autonumlines' then autonumlines:=pvalue='true'
-      else
-      if pname='define' then deflist.Add(pvalue.ToUpper())
-      else
+      if pname='codepage' then srcenc:=getEncodingByName(pvalue) else
+      if pname='autonumlines' then autonumlines:=pvalue='true' else
+      if pname='define' then deflist.Add(pvalue.ToUpper()) else
         ExitWithError('Unknown parameter: '+pname,5) ;
     end;
+
+    if not srcenc.IsOk then ExitWithError('Unknown codepage: '+pvalue,4) ;
 
     if not FileExists(ParamStr(1)) then
       ExitWithError('Not found input file: '+ParamStr(1),6) ;
@@ -168,6 +161,7 @@ begin
       ln.Free ;
     end;
 
+    script.WriteBOM:=False ;
     script.SaveToFile(ParamStr(2),srcenc) ;
     script.Free ;
 
@@ -195,17 +189,17 @@ end;
 procedure TMain.UpdateParamsByPragmasFromSourceFile(const filename: string);
 var s,pragma:string ;
     lines:TStringList ;
+    newenc:TOptional<TEncoding> ;
 begin
   lines:=TStringList.Create() ;
   lines.LoadFromFile(filename,TEncoding.GetEncoding(866)) ;
   for s in lines do
     if s.Trim().ToUpper().IndexOf('''$PRAGMA:')=0 then begin
       pragma:=s.Trim().ToUpper().Replace('''$PRAGMA:','').Replace('''','').Trim() ;
-      if pragma='UTF8' then srcenc:=TEncoding.UTF8 ;
-      if pragma='WIN1251' then srcenc:=TEncoding.GetEncoding(1251) ;
-      if pragma='OEM866' then srcenc:=TEncoding.GetEncoding(866) ;
-      if pragma='KOI8R' then srcenc:=TEncoding.GetEncoding(20866) ;
-      if pragma='AUTONUMLINES' then autonumlines:=True ;
+      newenc:=getEncodingByName(pragma) ;
+      if newenc then srcenc:=newenc else
+      if pragma='AUTONUMLINES' then autonumlines:=True else
+        ExitWithError('Unknown PRAGMA: '+pragma,11) ;
     end ;
   lines.Free ;
 end;
