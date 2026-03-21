@@ -20,6 +20,8 @@ type
     function LoadSourceFile(const filename: string; srcenc:TEncoding): TStringList;
   public
     constructor Create(const Ainputfile:string) ;
+    destructor Destroy ; override ;
+    procedure SetParamsFromPairs(pairs:TStringList) ;
     procedure SetEncodingFromParams(value:TEncoding) ;
     procedure EnableAutonumerates(value:Boolean) ;
     procedure AddDefine(const name:string) ;
@@ -40,6 +42,12 @@ begin
   paramenc:=TOptional<TEncoding>.NullOptional ;
   autonumlines:=False ;
   deflist:=TStringList.Create() ;
+end;
+
+destructor TBasicPreprocessor.Destroy;
+begin
+  deflist.Free ;
+  inherited Destroy;
 end;
 
 procedure TBasicPreprocessor.AddDefine(const name: string);
@@ -69,6 +77,22 @@ end;
 procedure TBasicPreprocessor.SetEncodingFromParams(value: TEncoding);
 begin
   paramenc:=value ;
+end;
+
+procedure TBasicPreprocessor.SetParamsFromPairs(pairs: TStringList);
+var i:Integer ;
+    enc:TOptional<TEncoding> ;
+begin
+  for i := 0 to pairs.Count-1 do begin
+    if pairs.Names[i]='codepage' then begin
+      enc:=getEncodingByName(pairs.ValueFromIndex[i]) ;
+      if enc then SetEncodingFromParams(enc.Value) else raise Exception.Create('Unknown codepage: '+pairs.ValueFromIndex[i]) ;
+    end
+    else
+    if pairs.Names[i]='autonumlines' then EnableAutonumerates(pairs.ValueFromIndex[i].ToLower()='true') else
+    if pairs.Names[i]='define' then AddDefine(pairs.ValueFromIndex[i].ToUpper()) else
+      raise Exception.Create('Unknown parameter: '+pairs.Names[i]) ;
+  end;
 end;
 
 function TBasicPreprocessor.GetDefineCommandFromLine(const line: string;

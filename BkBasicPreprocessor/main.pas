@@ -24,7 +24,7 @@ const MAINHELP = 'Preprocessor for BK-0010 Basic'#13#10+
 procedure TMain.Run() ;
 var i:Integer ;
     basic:TBasicPreprocessor ;
-    enc:TOptional<TEncoding> ;
+    pairs:TStringList ;
     res:TOptional<TStringList> ;
 begin
   try
@@ -34,19 +34,9 @@ begin
     end;
 
     basic:=TBasicPreprocessor.Create(ParamStr(1)) ;
-    with createParamPairsFromIndex(3) do begin
-      for i := 0 to Count-1 do begin
-        if Names[i]='codepage' then begin
-          enc:=getEncodingByName(ValueFromIndex[i]) ;
-          if enc then basic.SetEncodingFromParams(enc.Value) else raise Exception.Create('Unknown codepage: '+ValueFromIndex[i]) ;
-        end
-        else
-        if Names[i]='autonumlines' then basic.EnableAutonumerates(ValueFromIndex[i].ToLower()='true') else
-        if Names[i]='define' then basic.AddDefine(ValueFromIndex[i].ToUpper()) else
-          raise Exception.Create('Unknown parameter: '+Names[i]) ;
-      end;
-      Free ;
-    end;
+    pairs:=createParamPairsFromIndex(3) ;
+    basic.SetParamsFromPairs(pairs) ;
+    pairs.Free ;
 
     res:=basic.getResult() ;
     if not res.IsOk then raise Exception.Create('Preprocessor error: '+basic.getErrMsg()) ;
@@ -57,8 +47,10 @@ begin
 
     basic.Free ;
   except
-    on E: Exception do
+    on E: Exception do begin
       Writeln('Error '+E.ClassName+': '+E.Message);
+      Halt(1) ;
+    end;
   end;
 end ;
 

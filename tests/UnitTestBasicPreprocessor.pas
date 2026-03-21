@@ -41,7 +41,7 @@ end;
 procedure TestBasicPreprocessor.TestFromFiles;
 var i,j,idx:Integer ;
     basic:TBasicPreprocessor ;
-    enc:TOptional<TEncoding> ;
+    pairs:TStringList ;
     res:TOptional<TStringList> ;
     expected:TStringList ;
 begin
@@ -51,18 +51,12 @@ begin
   while FileExists(getInputFile(idx)) do begin
     basic:=TBasicPreprocessor.Create(getInputFile(idx)) ;
 
-    if FileExists(getOptFile(idx)) then
-      with TStringList.Create() do begin
-        LoadFromFile(getOptFile(idx)) ;
-        for i := 0 to Count-1 do begin
-          if Trim(Strings[i])='' then Continue ;
-          if Names[i]='codepage' then basic.SetEncodingFromParams(getEncodingByName(ValueFromIndex[i])) else
-          if Names[i]='autonumlines' then basic.EnableAutonumerates(ValueFromIndex[i].ToLower()='true') else
-          if Names[i]='define' then basic.AddDefine(ValueFromIndex[i].ToUpper()) else
-          raise Exception.Create('Unknown parameter: '+Names[i]) ;
-        end;
-        Free ;
-      end;
+    if FileExists(getOptFile(idx)) then begin
+      pairs:=TStringList.Create() ;
+      pairs.LoadFromFile(getOptFile(idx)) ;
+      basic.SetParamsFromPairs(pairs) ;
+      pairs.Free ;
+    end;
 
     res:=basic.getResult() ;
     if not res.IsOk then raise Exception.Create('Preprocessor error: '+basic.getErrMsg()) ;
