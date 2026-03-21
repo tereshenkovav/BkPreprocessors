@@ -8,7 +8,8 @@ uses
   Optional in '..\classes\Optional.pas',
   SourceEncodings in '..\classes\SourceEncodings.pas',
   ParamsParser in '..\classes\ParamsParser.pas',
-  BasicPreprocessor in '..\classes\BasicPreprocessor.pas' ;
+  BasicPreprocessor in '..\classes\BasicPreprocessor.pas',
+  NamePacker in '..\classes\NamePacker.pas' ;
 
 begin
   with TMain.Create() do begin

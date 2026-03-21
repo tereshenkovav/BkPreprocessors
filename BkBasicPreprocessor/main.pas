@@ -21,7 +21,9 @@ const MAINHELP = 'Preprocessor for BK-0010 Basic'#13#10+
   '/autonumlines=true|false - set line numbers to non-numbered Basic source'#13#10+
   '/define=name - set name for ''$IFDEF directive#13#10'+
   '/startline=num - set initial num for autonumlines (default 10)#13#10'+
-  '/stepline=num - set step for autonumlines (default 10)' ;
+  '/stepline=num - set step for autonumlines (default 10)#13#10'+
+  '/packnames=true|false - use short aliases for BASIC operators' ;
+
 
 procedure TMain.Run() ;
 var i:Integer ;

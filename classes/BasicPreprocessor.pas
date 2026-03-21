@@ -13,6 +13,7 @@ type
     errmsg:string ;
     pragmaenc,paramenc:TOptional<TEncoding> ;
     autonumlines:Boolean ;
+    packnames:Boolean ;
     deflist:TStringList ;
     startline,stepline:Integer ;
     function GetDefineCommandFromLine(const line:string; var defname:string):TDefBlockCommand ;
@@ -25,6 +26,7 @@ type
     procedure SetParamsFromPairs(pairs:TStringList) ;
     procedure SetEncodingFromParams(value:TEncoding) ;
     procedure EnableAutonumerates(value:Boolean) ;
+    procedure EnablePackNames(value:Boolean) ;
     procedure AddDefine(const name:string) ;
     procedure SetStartLine(value:Integer) ;
     procedure SetStepLine(value:Integer) ;
@@ -34,7 +36,7 @@ type
   end;
 
 implementation
-uses SourceEncodings, LineNumerator ;
+uses SourceEncodings, LineNumerator, NamePacker ;
 
 { TBasicPreprocessor }
 
@@ -44,6 +46,7 @@ begin
   pragmaenc:=TOptional<TEncoding>.NullOptional ;
   paramenc:=TOptional<TEncoding>.NullOptional ;
   autonumlines:=False ;
+  packnames:=False ;
   startline:=10 ;
   stepline:=10 ;
   deflist:=TStringList.Create() ;
@@ -63,6 +66,11 @@ end;
 procedure TBasicPreprocessor.EnableAutonumerates(value:Boolean);
 begin
   autonumlines:=value ;
+end;
+
+procedure TBasicPreprocessor.EnablePackNames(value: Boolean);
+begin
+  packnames:=Value ;
 end;
 
 function TBasicPreprocessor.getEncoding: TEncoding;
@@ -98,6 +106,7 @@ begin
     if pairs.Names[i]='startline' then SetStartLine(StrToInt(pairs.ValueFromIndex[i])) else
     if pairs.Names[i]='stepline' then SetStepLine(StrToInt(pairs.ValueFromIndex[i])) else
     if pairs.Names[i]='define' then AddDefine(pairs.ValueFromIndex[i].ToUpper()) else
+    if pairs.Names[i]='packnames' then EnablePackNames(pairs.ValueFromIndex[i].ToLower()='true') else
       raise Exception.Create('Unknown parameter: '+pairs.Names[i]) ;
   end;
 end;
@@ -224,12 +233,20 @@ begin
        Inc(i) ;
   end;
 
-  if autonumlines then begin
+  if autonumlines then
     with TLineNumerator.Create(script,startline,stepline) do begin
+      script.Free ;
       script:=getNumeratedLines() ;
       Free ;
     end;
-  end;
+
+  // Обязательно после автонумерации
+  if packnames then
+    with TNamePacker.Create(script) do begin
+      script.Free ;
+      script:=getPackedLines() ;
+      Free ;
+    end;
 
   Result:=script ;
   except
