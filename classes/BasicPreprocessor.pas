@@ -196,7 +196,7 @@ begin
         if currentdefblockstate in [dbsThen,dbsElse] then
           currentdefblockstate:=dbsNone
         else
-          raise Exception.Create('$ENDIF without $ELSE or $IDFEF') ;
+          raise Exception.Create('$ENDIF without $ELSE or $IFDEF') ;
     end;
     script[i]:=StripCommentFromLine(script[i]).Trim() ;
     if script[i].Length=0 then script.Delete(i) else
