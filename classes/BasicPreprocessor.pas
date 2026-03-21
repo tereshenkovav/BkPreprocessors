@@ -16,7 +16,7 @@ type
     deflist:TStringList ;
     function GetDefineCommandFromLine(const line:string; var defname:string):TDefBlockCommand ;
     function StripCommentFromLine(const line:string):string ;
-    function UpdateParamsByPragmas():Boolean ;
+    procedure UpdateParamsByPragmas() ;
     function LoadSourceFile(const filename: string; srcenc:TEncoding): TStringList;
   public
     constructor Create(const Ainputfile:string) ;
@@ -97,12 +97,11 @@ begin
   Result:=line ;
 end;
 
-function TBasicPreprocessor.UpdateParamsByPragmas():Boolean;
+procedure TBasicPreprocessor.UpdateParamsByPragmas();
 var s,pragma:string ;
     lines:TStringList ;
     newenc:TOptional<TEncoding> ;
 begin
-  Result:=True ;
   lines:=TStringList.Create() ;
   lines.LoadFromFile(inputfile,TEncoding.GetEncoding(866)) ;
   for s in lines do
@@ -110,10 +109,8 @@ begin
       pragma:=s.Trim().ToUpper().Replace('''$PRAGMA:','').Replace('''','').Trim() ;
       newenc:=getEncodingByName(pragma) ;
       if newenc then pragmaenc:=newenc else
-      if pragma='AUTONUMLINES' then autonumlines:=True else begin
-        Exit(False) ;
-        errmsg:='Unknown PRAGMA: '+pragma ;
-      end;
+      if pragma='AUTONUMLINES' then autonumlines:=True else
+        raise Exception.Create('Unknown PRAGMA: '+pragma);
     end ;
   lines.Free ;
 end;
