@@ -7,8 +7,9 @@ type
   TLineNumerator = class
   private
     lines:TStringList ;
+    start,step:Integer ;
   public
-    constructor Create(Alines:TStringList) ;
+    constructor Create(Alines:TStringList; Astart,Astep:Integer) ;
     destructor Destroy; override ;
     function getNumeratedLines():TStringList ;
   end;
@@ -28,10 +29,12 @@ end;
 
 { TLineNumerator }
 
-constructor TLineNumerator.Create(Alines: TStringList);
+constructor TLineNumerator.Create(Alines: TStringList; Astart,Astep:Integer);
 begin
   lines:=TStringList.Create() ;
   lines.Assign(Alines) ;
+  start:=Astart ;
+  step:=Astep ;
 end;
 
 function ConvertLabelsByDict(str:string; labs:TDictionary<string,Integer>):string ;
@@ -76,11 +79,10 @@ var s,str,lab,cmd:string ;
     goidx:TList<Integer> ;
     elseidx:Integer ;
     instring:Boolean ;
-const STEP = 10 ;
 begin
   Result:=TStringList.Create ;
   labs:=TDictionary<string,Integer>.Create ;
-  num:=STEP ;
+  num:=start ;
   i:=0 ;
   while i<lines.Count do begin
     cmd:=lines[i].Trim() ;
@@ -97,7 +99,7 @@ begin
       end ;
     end ;
     Result.Add(Format('%d %s',[num,cmd])) ;
-    Inc(num,STEP) ;
+    Inc(num,step) ;
     Inc(i) ;
   end;
 

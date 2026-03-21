@@ -19,7 +19,9 @@ const MAINHELP = 'Preprocessor for BK-0010 Basic'#13#10+
   'Parameters:'#13#10+
   '/codepage='+NAME_UTF8+'|'+NAME_WIN1251+'|'+NAME_KOI8R+'|'+NAME_OEM866+' - input and output codepage'#13#10+
   '/autonumlines=true|false - set line numbers to non-numbered Basic source'#13#10+
-  '/define=name - set name for ''$IFDEF directive' ;
+  '/define=name - set name for ''$IFDEF directive#13#10'+
+  '/startline=num - set initial num for autonumlines (default 10)#13#10'+
+  '/stepline=num - set step for autonumlines (default 10)' ;
 
 procedure TMain.Run() ;
 var i:Integer ;

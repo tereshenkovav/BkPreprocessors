@@ -14,6 +14,7 @@ type
     pragmaenc,paramenc:TOptional<TEncoding> ;
     autonumlines:Boolean ;
     deflist:TStringList ;
+    startline,stepline:Integer ;
     function GetDefineCommandFromLine(const line:string; var defname:string):TDefBlockCommand ;
     function StripCommentFromLine(const line:string):string ;
     procedure UpdateParamsByPragmas() ;
@@ -25,6 +26,8 @@ type
     procedure SetEncodingFromParams(value:TEncoding) ;
     procedure EnableAutonumerates(value:Boolean) ;
     procedure AddDefine(const name:string) ;
+    procedure SetStartLine(value:Integer) ;
+    procedure SetStepLine(value:Integer) ;
     function getResult():TOptional<TStringList> ;
     function getErrMsg():string ;
     function getEncoding():TEncoding ;
@@ -41,6 +44,8 @@ begin
   pragmaenc:=TOptional<TEncoding>.NullOptional ;
   paramenc:=TOptional<TEncoding>.NullOptional ;
   autonumlines:=False ;
+  startline:=10 ;
+  stepline:=10 ;
   deflist:=TStringList.Create() ;
 end;
 
@@ -90,9 +95,21 @@ begin
     end
     else
     if pairs.Names[i]='autonumlines' then EnableAutonumerates(pairs.ValueFromIndex[i].ToLower()='true') else
+    if pairs.Names[i]='startline' then SetStartLine(StrToInt(pairs.ValueFromIndex[i])) else
+    if pairs.Names[i]='stepline' then SetStepLine(StrToInt(pairs.ValueFromIndex[i])) else
     if pairs.Names[i]='define' then AddDefine(pairs.ValueFromIndex[i].ToUpper()) else
       raise Exception.Create('Unknown parameter: '+pairs.Names[i]) ;
   end;
+end;
+
+procedure TBasicPreprocessor.SetStartLine(value: Integer);
+begin
+  startline:=value ;
+end;
+
+procedure TBasicPreprocessor.SetStepLine(value: Integer);
+begin
+  stepline:=value ;
 end;
 
 function TBasicPreprocessor.GetDefineCommandFromLine(const line: string;
@@ -208,7 +225,7 @@ begin
   end;
 
   if autonumlines then begin
-    with TLineNumerator.Create(script) do begin
+    with TLineNumerator.Create(script,startline,stepline) do begin
       script:=getNumeratedLines() ;
       Free ;
     end;
