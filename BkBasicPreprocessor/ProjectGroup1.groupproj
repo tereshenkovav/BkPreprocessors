@@ -1,0 +1,48 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <PropertyGroup>
+        <ProjectGuid>{B7C28582-B2DC-4B4B-904D-B2C4286F27D0}</ProjectGuid>
+    </PropertyGroup>
+    <ItemGroup>
+        <Projects Include="BkBasicPreprocessor.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="..\tests\TestsBasicPreprocessor.dproj">
+            <Dependencies/>
+        </Projects>
+    </ItemGroup>
+    <ProjectExtensions>
+        <Borland.Personality>Default.Personality.12</Borland.Personality>
+        <Borland.ProjectType/>
+        <BorlandProject>
+            <Default.Personality/>
+        </BorlandProject>
+    </ProjectExtensions>
+    <Target Name="BkBasicPreprocessor">
+        <MSBuild Projects="BkBasicPreprocessor.dproj"/>
+    </Target>
+    <Target Name="BkBasicPreprocessor:Clean">
+        <MSBuild Projects="BkBasicPreprocessor.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="BkBasicPreprocessor:Make">
+        <MSBuild Projects="BkBasicPreprocessor.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="TestsBasicPreprocessor">
+        <MSBuild Projects="..\tests\TestsBasicPreprocessor.dproj"/>
+    </Target>
+    <Target Name="TestsBasicPreprocessor:Clean">
+        <MSBuild Projects="..\tests\TestsBasicPreprocessor.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="TestsBasicPreprocessor:Make">
+        <MSBuild Projects="..\tests\TestsBasicPreprocessor.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Build">
+        <CallTarget Targets="BkBasicPreprocessor;TestsBasicPreprocessor"/>
+    </Target>
+    <Target Name="Clean">
+        <CallTarget Targets="BkBasicPreprocessor:Clean;TestsBasicPreprocessor:Clean"/>
+    </Target>
+    <Target Name="Make">
+        <CallTarget Targets="BkBasicPreprocessor:Make;TestsBasicPreprocessor:Make"/>
+    </Target>
+    <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
+</Project>

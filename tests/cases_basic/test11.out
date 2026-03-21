@@ -1,0 +1,10 @@
+10 PRINT "Test included files"
+20 GOSUB 40
+30 END
+40 BEEP
+50 BEEP
+60 PRINT "Hello"
+70 BEEP
+80 BEEP
+90 RETURN
+100 PRINT "End of file"

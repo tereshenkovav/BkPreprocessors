@@ -1,0 +1,5 @@
+10 PRINT "BK10 in define"
+20 PRINT "BK11 in define"
+30 PRINT "BK10 in define with else"
+40 PRINT "BK11 in define with else"
+50 END

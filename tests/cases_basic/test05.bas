@@ -1,0 +1,46 @@
+' Просто комментарий в UTF-8
+PRINT "Basic program with auto line nums"
+
+' Блоки со ссылками для тестирования
+LabData: DATA 1,2,3
+Label1: PRINT "Line with LABEL1"
+
+' Висящая строка метки
+LABEL2:
+PRINT "Line with LABEL2"
+
+LaBeL3: PRINT "Line with LABEL3"
+
+' Еще висящая строка метки с пустой строкой после
+label4:
+
+PRINT "Line with LABEL4"
+
+' Использование ссылок во всех конструкциях
+RESTORE LabData
+GOTO  Label1
+GOSUB Label2  
+ON I% GOSUB LABEL1,label2
+ON I% GOTO LABEL3, label4
+
+' Смешанные конструкции
+IF I%=1 THEN GOTO Label1   ELSE  GOSUB LABEL4
+IF A%=2 THEN PRINT "2"   ELSE  GOSUB LABEL4
+IF A%=3 THEN GOTO Label1   ELSE  PRINT "3"
+
+' Корректная обработка ключевых слов в строках Бейсика
+IF I%=1 THEN PRINT " GOTO Label1"   ELSE  GOSUB LABEL4
+IF I%=1 THEN GOTO Label1   ELSE  PRINT " GOSUB LABEL4"
+IF I%=1 THEN PRINT " GOTO Label1"   ELSE  PRINT " GOSUB LABEL4"
+IF I%=1 THEN PRINT " GOTO Label1   ELSE  GOSUB LABEL4"
+? "IF I%=1 THEN GOTO Label1   ELSE  GOSUB LABEL4"
+
+' Переход на метку вперед
+GOTO FINALLAB
+
+BEEP
+
+FINALLAB:
+' Конец программы и пара пустых строк
+
+END

@@ -20,7 +20,7 @@ begin
   if str=NAME_UTF8 then Exit(TEncoding.UTF8) ;
   if str=NAME_WIN1251 then Exit(TEncoding.GetEncoding(1251)) ;
   if str=NAME_OEM866 then Exit(TEncoding.GetEncoding(866)) ;
-  if str=NAME_OEM866 then Exit(TEncoding.GetEncoding(20866)) ;
+  if str=NAME_KOI8R then Exit(TEncoding.GetEncoding(20866)) ;
 end;
 
 end.

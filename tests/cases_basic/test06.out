@@ -1,0 +1,10 @@
+10 PRINT "Basic program with remarks"
+20 BEEP
+30 BEEP
+40 BEEP
+50 BEEP
+60 PRINT " ' Комментарий внутри строки"
+70 PRINT " REM Комментарий внутри строки"
+80 PRINT "Строка"
+90 PRINT "Еще строка"
+100 END
