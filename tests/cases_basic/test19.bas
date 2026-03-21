@@ -1,0 +1,4 @@
+'$PRAGMA: AUTONUMLINES
+Label1: PRINT "Label1"
+Label3: PRINT "Label3"
+GOTO Label2
