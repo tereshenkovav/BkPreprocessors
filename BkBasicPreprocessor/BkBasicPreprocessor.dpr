@@ -6,7 +6,9 @@ uses
   main,
   LineNumerator in '..\classes\LineNumerator.pas',
   Optional in '..\classes\Optional.pas',
-  SourceEncodings in '..\classes\SourceEncodings.pas' ;
+  SourceEncodings in '..\classes\SourceEncodings.pas',
+  ParamsParser in '..\classes\ParamsParser.pas',
+  BasicPreprocessor in '..\classes\BasicPreprocessor.pas' ;
 
 begin
   with TMain.Create() do begin

@@ -1,17 +1,16 @@
 unit LineNumerator;
 
 interface
-uses Classes, Optional ;
+uses Classes ;
 
 type
   TLineNumerator = class
   private
     lines:TStringList ;
-    errmsg:string ;
   public
     constructor Create(Alines:TStringList) ;
-    function getNumeratedLines():TOptional<TStringList> ;
-    function getErrMsg():string ;
+    destructor Destroy; override ;
+    function getNumeratedLines():TStringList ;
   end;
 
 implementation
@@ -31,12 +30,8 @@ end;
 
 constructor TLineNumerator.Create(Alines: TStringList);
 begin
-  lines:=Alines ;
-end;
-
-function TLineNumerator.getErrMsg: string;
-begin
-  Result:=errmsg ;
+  lines:=TStringList.Create() ;
+  lines.Assign(Alines) ;
 end;
 
 function ConvertLabelsByDict(str:string; labs:TDictionary<string,Integer>):string ;
@@ -68,17 +63,22 @@ begin
           str.Substring(p4) ;
 end ;
 
-function TLineNumerator.getNumeratedLines: TOptional<TStringList>;
+destructor TLineNumerator.Destroy;
+begin
+  lines.Free ;
+  inherited Destroy;
+end;
+
+function TLineNumerator.getNumeratedLines: TStringList;
 var s,str,lab,cmd:string ;
     p,i,num:Integer ;
-    newlines:TStringList ;
     labs:TDictionary<string,Integer> ;
     goidx:TList<Integer> ;
     elseidx:Integer ;
     instring:Boolean ;
 const STEP = 10 ;
 begin
-  newlines:=TStringList.Create ;
+  Result:=TStringList.Create ;
   labs:=TDictionary<string,Integer>.Create ;
   num:=STEP ;
   i:=0 ;
@@ -96,13 +96,13 @@ begin
         end ;
       end ;
     end ;
-    newlines.Add(Format('%d %s',[num,cmd])) ;
+    Result.Add(Format('%d %s',[num,cmd])) ;
     Inc(num,STEP) ;
     Inc(i) ;
   end;
 
-  for i := 0 to newlines.Count-1 do begin
-    str:=newlines[i] ;
+  for i := 0 to Result.Count-1 do begin
+    str:=Result[i] ;
     goidx:=TList<Integer>.Create ;
     elseidx:=-1 ;
     instring:=False ;
@@ -138,11 +138,10 @@ begin
     end ;
     goidx.Free ;
 
-    newlines[i]:=str ;
+    Result[i]:=str ;
   end;
 
   labs.Free ;
-  Result:=newlines ;
 end;
 
 end.

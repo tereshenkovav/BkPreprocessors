@@ -4,25 +4,14 @@ interface
 uses SysUtils, Classes, Optional ;
 
 type
-  TDefBlockState = (dbsNone,dbsThen,dbsElse) ;
-  TDefBlockCommand = (dbcNone,dbcDefine,dbcElse,dbcEnd) ;
-
   TMain = class
-  private
-    srcenc:TOptional<TEncoding> ;
-    autonumlines:Boolean ;
-    function StripCommentFromLine(const line:string):string ;
-    function GetDefineCommandFromLine(const line:string; var defname:string):TDefBlockCommand ;
-    procedure ExitWithError(const msg: string; code: Integer);
-    function LoadSourceFile(const filename:string):TStringList ;
-    procedure UpdateParamsByPragmasFromSourceFile(const filename:string) ;
   public
     procedure Run() ;
   end;
 
 implementation
 uses Generics.Collections, Math, LineNumerator, Version,
-  SourceEncodings ;
+  SourceEncodings, BasicPreprocessor, ParamsParser ;
 
 const MAINHELP = 'Preprocessor for BK-0010 Basic'#13#10+
   'Version: '+TGitVersion.TAG+#13#10+
@@ -32,176 +21,45 @@ const MAINHELP = 'Preprocessor for BK-0010 Basic'#13#10+
   '/autonumlines=true|false - set line numbers to non-numbered Basic source'#13#10+
   '/define=name - set name for ''$IFDEF directive' ;
 
-procedure TMain.ExitWithError(const msg: string; code: Integer);
-begin
-  Writeln(msg) ;
-  Halt(code) ;
-end;
-
-function TMain.GetDefineCommandFromLine(const line: string;
-  var defname: string): TDefBlockCommand;
-begin
-  Result:=dbcNone ;
-  if line.Trim().IndexOf('''$IFDEF')=0 then begin
-    Result:=dbcDefine ;
-    defname:=line.Replace('''$IFDEF','').Trim().ToUpper() ;
-  end;
-  if line.Trim().IndexOf('''$ELSE')=0 then Result:=dbcElse ;
-  if line.Trim().IndexOf('''$ENDIF')=0 then Result:=dbcEnd ;
-end;
-
-function TMain.LoadSourceFile(const filename: string): TStringList;
-var i:Integer ;
-    j:Integer ;
-    incfile:string ;
-    included:TStringList ;
-begin
-  Result:=TStringList.Create() ;
-  Result.LoadFromFile(filename,srcenc) ;
-  i:=0 ;
-  while i<Result.Count do begin
-    if Result[i].Trim().IndexOf('''$INCLUDE:')=0 then begin
-      incfile:=Result[i].Replace('''$INCLUDE:','').Replace('''','').Trim() ;
-      if not FileExists(incfile) then ExitWithError('Not found included file: '+incfile,1) ;
-      Result.Delete(i) ;
-      included:=LoadSourceFile(incfile) ;
-      for j:=0 to included.Count-1 do
-        Result.Insert(i+j,included[j]) ;
-      included.Free ;
-    end
-    else
-      Inc(i) ;
-  end ;
-
-end;
-
 procedure TMain.Run() ;
-var script:TStringList ;
-    pname,pvalue:string ;
-    i,p:Integer ;
-    destfile:string ;
-    ln:TLineNumerator ;
-    newlines:TOptional<TStringList> ;
-    deflist:TStringList ;
-    currentdefblock:string ;
-    currentdefblockstate:TDefBlockState ;
+var i:Integer ;
+    basic:TBasicPreprocessor ;
+    enc:TOptional<TEncoding> ;
+    res:TOptional<TStringList> ;
 begin
   try
-    if ParamCount<1 then ExitWithError(MAINHELP,1) ;
-
-    deflist:=TStringList.Create ;
-    srcenc:=TEncoding.UTF8 ;
-    autonumlines:=False ;
-
-    // Прагмы проверяем в начале, потому что у аргументов командной строки - приоритет
-    UpdateParamsByPragmasFromSourceFile(ParamStr(1)) ;
-
-    for i := 3 to ParamCount do begin
-      if ParamStr(i)[1]<>'/' then ExitWithError('Unknown argument: '+ParamStr(i)+', use /name=value',2) ;
-      p:=ParamStr(i).IndexOf('=') ;
-      if p=-1 then ExitWithError('Unknown argument: '+ParamStr(i)+', use /name=value',3) ;
-      pname:=ParamStr(i).Substring(1,p-1) ;
-      pvalue:=ParamStr(i).Substring(p+1).ToLower() ;
-      if pname='codepage' then srcenc:=getEncodingByName(pvalue) else
-      if pname='autonumlines' then autonumlines:=pvalue='true' else
-      if pname='define' then deflist.Add(pvalue.ToUpper()) else
-        ExitWithError('Unknown parameter: '+pname,5) ;
+    if ParamCount<2 then begin
+      Writeln(MAINHELP) ;
+      Halt(1) ;
     end;
 
-    if not srcenc.IsOk then ExitWithError('Unknown codepage: '+pvalue,4) ;
-
-    if not FileExists(ParamStr(1)) then
-      ExitWithError('Not found input file: '+ParamStr(1),6) ;
-
-    destfile:=ParamStr(2) ;
-
-    // Загрузка файла с учетом включаемых файлов
-    script:=loadSourceFile(ParamStr(1)) ;
-
-    // Обработка условных директив и удаление комментариев
-    i:=0 ;
-    currentdefblock:='' ;
-    currentdefblockstate:=dbsNone ;
-    while i<script.Count do begin
-      case GetDefineCommandFromLine(script[i],currentdefblock) of
-        dbcDefine:
-          if currentdefblockstate=dbsNone then
-            currentdefblockstate:=dbsThen
-          else
-            ExitWithError('Multilevel $IFDEF not supported yet',1) ;
-        dbcElse:
-          if currentdefblockstate=dbsThen then
-            currentdefblockstate:=dbsElse
-          else
-            ExitWithError('$ELSE without $IFDEF',1) ;
-        dbcEnd:
-          if currentdefblockstate in [dbsThen,dbsElse] then
-            currentdefblockstate:=dbsNone
-          else
-            ExitWithError('$ENDIF without $ELSE or $IDFEF',1) ;
+    basic:=TBasicPreprocessor.Create(ParamStr(1)) ;
+    with createParamPairsFromIndex(3) do begin
+      for i := 0 to Count-1 do begin
+        if Names[i]='codepage' then begin
+          enc:=getEncodingByName(ValueFromIndex[i]) ;
+          if enc then basic.SetEncodingFromParams(enc.Value) else raise Exception.Create('Unknown codepage: '+ValueFromIndex[i]) ;
+        end
+        else
+        if Names[i]='autonumlines' then basic.EnableAutonumerates(ValueFromIndex[i].ToLower()='true') else
+        if Names[i]='define' then basic.AddDefine(ValueFromIndex[i].ToUpper()) else
+          raise Exception.Create('Unknown parameter: '+Names[i]) ;
       end;
-      script[i]:=StripCommentFromLine(script[i]).Trim() ;
-      if script[i].Length=0 then script.Delete(i) else
-      if (currentdefblockstate=dbsThen)and
-        (deflist.IndexOf(currentdefblock)=-1) then script.Delete(i) else
-      if (currentdefblockstate=dbsElse)and
-        (deflist.IndexOf(currentdefblock)<>-1) then script.Delete(i) else
-         Inc(i) ;
+      Free ;
     end;
 
-    if autonumlines then begin
-      ln:=TLineNumerator.Create(script) ;
-      newlines:=ln.getNumeratedLines() ;
-      if (newlines) then begin
-        script.Free ;
-        script:=newlines.Value ;
-      end
-      else
-        ExitWithError('Error enumerate lines: '+ln.getErrMsg(),10) ;
-      ln.Free ;
-    end;
+    res:=basic.getResult() ;
+    if not res.IsOk then raise Exception.Create('Preprocessor error: '+basic.getErrMsg()) ;
 
-    script.WriteBOM:=False ;
-    script.SaveToFile(ParamStr(2),srcenc) ;
-    script.Free ;
+    res.Value.WriteBOM:=False ;
+    res.Value.SaveToFile(ParamStr(2),basic.getEncoding()) ;
+    res.Value.Free ;
 
-    deflist.Free ;
+    basic.Free ;
   except
     on E: Exception do
       Writeln('Error '+E.ClassName+': '+E.Message);
   end;
 end ;
-
-function TMain.StripCommentFromLine(const line: string): string;
-var i:Integer ;
-    instring:Boolean ;
-begin
-  instring:=False ;
-  for i := 0 to line.Length-1 do begin
-    if line[i]='"' then instring:=not instring ;
-    if not instring then
-      if (line[i]='''')or (line.Substring(i,3).ToUpper()='REM') then
-        Exit(line.Substring(0,i-1)) ;
-  end;
-  Result:=line ;
-end;
-
-procedure TMain.UpdateParamsByPragmasFromSourceFile(const filename: string);
-var s,pragma:string ;
-    lines:TStringList ;
-    newenc:TOptional<TEncoding> ;
-begin
-  lines:=TStringList.Create() ;
-  lines.LoadFromFile(filename,TEncoding.GetEncoding(866)) ;
-  for s in lines do
-    if s.Trim().ToUpper().IndexOf('''$PRAGMA:')=0 then begin
-      pragma:=s.Trim().ToUpper().Replace('''$PRAGMA:','').Replace('''','').Trim() ;
-      newenc:=getEncodingByName(pragma) ;
-      if newenc then srcenc:=newenc else
-      if pragma='AUTONUMLINES' then autonumlines:=True else
-        ExitWithError('Unknown PRAGMA: '+pragma,11) ;
-    end ;
-  lines.Free ;
-end;
 
 end.

@@ -98,6 +98,8 @@
         <DCCReference Include="..\classes\LineNumerator.pas"/>
         <DCCReference Include="..\classes\Optional.pas"/>
         <DCCReference Include="..\classes\SourceEncodings.pas"/>
+        <DCCReference Include="..\classes\ParamsParser.pas"/>
+        <DCCReference Include="..\classes\BasicPreprocessor.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
