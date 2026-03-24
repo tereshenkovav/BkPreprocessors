@@ -14,6 +14,7 @@ type
     pragmaenc,paramenc:TOptional<TEncoding> ;
     autonumlines:Boolean ;
     packnames:Boolean ;
+    stripspaces:Boolean ;
     deflist:TStringList ;
     startline,stepline:Integer ;
     function GetDefineCommandFromLine(const line:string; var defname:string):TDefBlockCommand ;
@@ -27,6 +28,7 @@ type
     procedure SetEncodingFromParams(value:TEncoding) ;
     procedure EnableAutonumerates(value:Boolean) ;
     procedure EnablePackNames(value:Boolean) ;
+    procedure EnableStripSpaces(value:Boolean) ;
     procedure AddDefine(const name:string) ;
     procedure SetStartLine(value:Integer) ;
     procedure SetStepLine(value:Integer) ;
@@ -36,7 +38,7 @@ type
   end;
 
 implementation
-uses SourceEncodings, LineNumerator, NamePacker ;
+uses SourceEncodings, LineNumerator, NamePacker, SpaceStripper ;
 
 { TBasicPreprocessor }
 
@@ -73,6 +75,11 @@ begin
   packnames:=Value ;
 end;
 
+procedure TBasicPreprocessor.EnableStripSpaces(value: Boolean);
+begin
+  stripspaces:=value ;
+end;
+
 function TBasicPreprocessor.getEncoding: TEncoding;
 begin
   // Кодировка по умолчанию
@@ -107,6 +114,7 @@ begin
     if pairs.Names[i]='stepline' then SetStepLine(StrToInt(pairs.ValueFromIndex[i])) else
     if pairs.Names[i]='define' then AddDefine(pairs.ValueFromIndex[i].ToUpper()) else
     if pairs.Names[i]='packnames' then EnablePackNames(pairs.ValueFromIndex[i].ToLower()='true') else
+    if pairs.Names[i]='stripspaces' then EnableStripSpaces(pairs.ValueFromIndex[i].ToLower()='true') else
       raise Exception.Create('Unknown parameter: '+pairs.Names[i]) ;
   end;
 end;
@@ -245,6 +253,14 @@ begin
     with TNamePacker.Create(script) do begin
       script.Free ;
       script:=getPackedLines() ;
+      Free ;
+    end;
+
+  // Обязательно после автонумерации и после упаковки символов
+  if stripspaces then
+    with TSpaceStripper.Create(script) do begin
+      script.Free ;
+      script:=getStrippedLines() ;
       Free ;
     end;
 

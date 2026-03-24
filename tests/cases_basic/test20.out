@@ -1,5 +1,6 @@
 5 DA 1,2,3
 10 ? "Test"
+15 ? "Test with keywords GOTO FOR BEEP"
 20 IF X%>10 TH 10 EL GOS 20
 25 IF X%<10 TH ? "OK" EL 20
 30 FO X% = 1 TO 10 ST 5
