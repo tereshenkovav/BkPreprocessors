@@ -146,11 +146,11 @@ var i:Integer ;
     instring:Boolean ;
 begin
   instring:=False ;
-  for i := 0 to line.Length-1 do begin
+  for i := 1 to line.Length do begin
     if line[i]='"' then instring:=not instring ;
     if not instring then
-      if (line[i]='''')or (line.Substring(i,3).ToUpper()='REM') then
-        Exit(line.Substring(0,i-1)) ;
+      if (line[i]='''')or (line.Substring(i-1,3).ToUpper()='REM') then
+        Exit(line.Substring(0,i-2)) ;
   end;
   Result:=line ;
 end;

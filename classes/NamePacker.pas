@@ -88,7 +88,7 @@ begin
     repeat
       instring:=False ;
       replaced:=False ;
-      for p := 0 to str.Length-1 do begin
+      for p := 1 to str.Length do begin
         if str[p]='"' then instring:=not instring ;
         if instring then Continue ;
         for i := 0 to aliases.Count-1 do

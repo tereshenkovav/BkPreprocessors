@@ -108,7 +108,7 @@ begin
     goidx:=TList<Integer>.Create ;
     elseidx:=-1 ;
     instring:=False ;
-    for p := 0 to str.Length-1 do begin
+    for p := 1 to str.Length do begin
       if str[p]='"' then instring:=not instring ;
       if instring then Continue ;
       if str.ToUpper().Substring(p,6)=' GOTO ' then goidx.Add(p+6) ;
