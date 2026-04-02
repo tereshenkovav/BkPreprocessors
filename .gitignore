@@ -68,5 +68,4 @@ dunitx-results.xml
 
 *.tmp
 build/i386-win32
-BkBasicPreprocessor/Version.pas
-BkFocalPreprocessor/Version.pas
+classes/Version.pas

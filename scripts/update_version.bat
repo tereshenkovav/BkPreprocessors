@@ -6,12 +6,12 @@ for /F %%i in ('git branch --show-current') do set BUILDBRANCH=%%i
 
 echo %BUILDTAG% %BUILDCOMMIT% %BUILDBRANCH%
 
-echo unit Version ;  > ..\BkBasicPreprocessor\Version.pas
-echo interface >> ..\BkBasicPreprocessor\Version.pas 
-echo type TGitVersion = class >> ..\BkBasicPreprocessor\Version.pas 
-echo const COMMIT = '%BUILDCOMMIT%'; >> ..\BkBasicPreprocessor\Version.pas
-echo const BRANCH = '%BUILDBRANCH%'; >> ..\BkBasicPreprocessor\Version.pas
-echo const TAG = '%BUILDTAG%'; >> ..\BkBasicPreprocessor\Version.pas
-echo end ; >> ..\BkBasicPreprocessor\Version.pas
-echo implementation >> ..\BkBasicPreprocessor\Version.pas
-echo end. >> ..\BkBasicPreprocessor\Version.pas
+echo unit Version ;  > ..\classes\Version.pas
+echo interface >> ..\classes\Version.pas
+echo type TGitVersion = class >> ..\classes\Version.pas
+echo const COMMIT = '%BUILDCOMMIT%'; >> ..\classes\Version.pas
+echo const BRANCH = '%BUILDBRANCH%'; >> ..\classes\Version.pas
+echo const TAG = '%BUILDTAG%'; >> ..\classes\Version.pas
+echo end ; >> ..\classes\Version.pas
+echo implementation >> ..\classes\Version.pas
+echo end. >> ..\classes\Version.pas
