@@ -76,7 +76,6 @@ begin
   if name='autonumlines' then autonumlines:=value.ToLower()='true' else
   if name='startline' then startline:=StrToInt(value) else
   if name='stepline' then stepline:=StrToInt(value) else
-  if name='define' then AddDefine(value.ToUpper()) else
   if name='packnames' then packnames:=value.ToLower()='true' else
   if name='stripspaces' then stripspaces:=value.ToLower()='true' else
   Result:=False ;
