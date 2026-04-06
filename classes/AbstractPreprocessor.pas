@@ -13,14 +13,21 @@ type
     errmsg:string ;
     pragmaenc,paramenc:TOptional<TEncoding> ;
     deflist:TStringList ;
-    function GetDefineCommandFromLine(const line:string; var defname:string):TDefBlockCommand ;
     function LoadSourceFile(const filename: string; srcenc:TEncoding): TStringList;
-    function StripCommentFromLine(const line:string):string ; virtual ; abstract ;
     procedure ProcessPragmasAndComments(script:TStringList) ;
+    procedure UpdateParamsByPragmas() ;
+    // Блок для переопределения в конкретном препроцессоре
+    function SetParamFromPair(const name:string; const value:string):Boolean ; virtual ; abstract ;
+    function SetPragma(const name:string):Boolean ; virtual ; abstract ;
+    function StripCommentFromLine(const line:string):string ; virtual ; abstract ;
+    function GetDefineCommandFromLine(const line:string; var defname:string):TDefBlockCommand ; virtual ; abstract ;
+    function isIncludeDirective(const line:string; var incfile:string):Boolean ; virtual ; abstract ;
+    function isPragmaDirective(const line:string; var pragma:string):Boolean ; virtual ; abstract ;
   public
     constructor Create(const Ainputfile:string) ;
     destructor Destroy ; override ;
     procedure SetEncodingFromParams(value:TEncoding) ;
+    procedure SetParamsFromPairs(pairs:TStringList) ;
     procedure AddDefine(const name:string) ;
     function getErrMsg():string ;
     function getEncoding():TEncoding ;
@@ -69,21 +76,45 @@ begin
   paramenc:=value ;
 end;
 
-function TAbstractPreprocessor.GetDefineCommandFromLine(const line: string;
-  var defname: string): TDefBlockCommand;
+procedure TAbstractPreprocessor.SetParamsFromPairs(pairs: TStringList);
+var i:Integer ;
+    enc:TOptional<TEncoding> ;
 begin
-  Result:=dbcNone ;
-  if line.Trim().IndexOf('''$IFDEF')=0 then begin
-    Result:=dbcDefine ;
-    defname:=line.Replace('''$IFDEF','').Trim().ToUpper() ;
+  for i := 0 to pairs.Count-1 do begin
+    // Сначала общие параметры
+    if pairs.Names[i]='codepage' then begin
+      enc:=getEncodingByName(pairs.ValueFromIndex[i]) ;
+      if enc then SetEncodingFromParams(enc.Value) else raise Exception.Create('Unknown codepage: '+pairs.ValueFromIndex[i]) ;
+    end
+    else
+    if pairs.Names[i]='define' then AddDefine(pairs.ValueFromIndex[i].ToUpper()) else
+    // потом вызов настроки уникальных параметров для конкретного препроцессора
+    if not SetParamFromPair(pairs.Names[i],pairs.ValueFromIndex[i]) then
+      raise Exception.Create('Unknown parameter: '+pairs.Names[i]) ;
   end;
-  if line.Trim().IndexOf('''$ELSE')=0 then Result:=dbcElse ;
-  if line.Trim().IndexOf('''$ENDIF')=0 then Result:=dbcEnd ;
+end;
+
+procedure TAbstractPreprocessor.UpdateParamsByPragmas();
+var s,pragma:string ;
+    lines:TStringList ;
+    newenc:TOptional<TEncoding> ;
+begin
+  lines:=TStringList.Create() ;
+  lines.LoadFromFile(inputfile,TEncoding.GetEncoding(866)) ;
+  for s in lines do
+    if isPragmaDirective(s,pragma) then begin
+      // Сначала обработка прагмы кодировки, общей для всех
+      newenc:=getEncodingByName(pragma) ;
+      if newenc then pragmaenc:=newenc else
+      // Потом уникальная прагма для конкретного препроцессора
+      if not SetPragma(pragma) then
+        raise Exception.Create('Unknown PRAGMA: '+pragma);
+    end ;
+  lines.Free ;
 end;
 
 function TAbstractPreprocessor.LoadSourceFile(const filename: string; srcenc:TEncoding): TStringList;
-var i:Integer ;
-    j:Integer ;
+var i,j:Integer ;
     incfile:string ;
     included:TStringList ;
 begin
@@ -93,8 +124,7 @@ begin
   Result.LoadFromFile(filename,srcenc) ;
   i:=0 ;
   while i<Result.Count do begin
-    if Result[i].Trim().IndexOf('''$INCLUDE:')=0 then begin
-      incfile:=Result[i].Replace('''$INCLUDE:','').Replace('''','').Trim() ;
+    if isIncludeDirective(Result[i], incfile) then begin
       included:=LoadSourceFile(incfile, srcenc) ;
       Result.Delete(i) ;
       for j:=0 to included.Count-1 do
@@ -121,17 +151,17 @@ begin
         if currentdefblockstate=dbsNone then
           currentdefblockstate:=dbsThen
         else
-          raise Exception.Create('Multilevel $IFDEF not supported yet') ;
+          raise Exception.Create('Multilevel IFDEF not supported yet') ;
       dbcElse:
         if currentdefblockstate=dbsThen then
           currentdefblockstate:=dbsElse
         else
-          raise Exception.Create('$ELSE without $IFDEF') ;
+          raise Exception.Create('ELSE without IFDEF') ;
       dbcEnd:
         if currentdefblockstate in [dbsThen,dbsElse] then
           currentdefblockstate:=dbsNone
         else
-          raise Exception.Create('$ENDIF without $ELSE or $IFDEF') ;
+          raise Exception.Create('ENDIF without ELSE or IFDEF') ;
     end;
     script[i]:=StripCommentFromLine(script[i]).Trim() ;
     if script[i].Length=0 then script.Delete(i) else

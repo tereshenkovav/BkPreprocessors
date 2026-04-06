@@ -10,11 +10,15 @@ type
     packnames:Boolean ;
     stripspaces:Boolean ;
     startline,stepline:Integer ;
+  protected
+    function SetParamFromPair(const name:string; const value:string):Boolean ; override ;
+    function SetPragma(const name:string):Boolean; override ;
     function StripCommentFromLine(const line:string):string ; override ;
-    procedure UpdateParamsByPragmas() ;
+    function GetDefineCommandFromLine(const line: string; var defname: string): TDefBlockCommand; override ;
+    function isIncludeDirective(const line:string; var incfile:string):Boolean ; override ;
+    function isPragmaDirective(const line:string; var pragma:string):Boolean ; override ;
   public
     constructor Create(const Ainputfile:string) ;
-    procedure SetParamsFromPairs(pairs:TStringList) ;
     function getResult():TOptional<TStringList> ;
   end;
 
@@ -32,24 +36,57 @@ begin
   stepline:=10 ;
 end;
 
-procedure TBasicPreprocessor.SetParamsFromPairs(pairs: TStringList);
-var i:Integer ;
-    enc:TOptional<TEncoding> ;
+// Переопределения настроек конкретного препроцессора
+
+function TBasicPreprocessor.isIncludeDirective(const line: string;
+  var incfile: string): Boolean;
 begin
-  for i := 0 to pairs.Count-1 do begin
-    if pairs.Names[i]='codepage' then begin
-      enc:=getEncodingByName(pairs.ValueFromIndex[i]) ;
-      if enc then SetEncodingFromParams(enc.Value) else raise Exception.Create('Unknown codepage: '+pairs.ValueFromIndex[i]) ;
-    end
-    else
-    if pairs.Names[i]='autonumlines' then autonumlines:=pairs.ValueFromIndex[i].ToLower()='true' else
-    if pairs.Names[i]='startline' then startline:=StrToInt(pairs.ValueFromIndex[i]) else
-    if pairs.Names[i]='stepline' then stepline:=StrToInt(pairs.ValueFromIndex[i]) else
-    if pairs.Names[i]='define' then AddDefine(pairs.ValueFromIndex[i].ToUpper()) else
-    if pairs.Names[i]='packnames' then packnames:=pairs.ValueFromIndex[i].ToLower()='true' else
-    if pairs.Names[i]='stripspaces' then stripspaces:=pairs.ValueFromIndex[i].ToLower()='true' else
-      raise Exception.Create('Unknown parameter: '+pairs.Names[i]) ;
+  Result:=False ;
+  if line.Trim().IndexOf('''$INCLUDE:')=0 then begin
+    incfile:=line.Replace('''$INCLUDE:','').Replace('''','').Trim() ;
+    Result:=True ;
   end;
+end;
+
+function TBasicPreprocessor.isPragmaDirective(const line: string;
+  var pragma: string): Boolean;
+begin
+  Result:=False ;
+  if line.Trim().ToUpper().IndexOf('''$PRAGMA:')=0 then begin
+    pragma:=line.Trim().ToUpper().Replace('''$PRAGMA:','').Replace('''','').Trim() ;
+    Result:=True ;
+  end;
+end;
+
+function TBasicPreprocessor.GetDefineCommandFromLine(const line: string;
+  var defname: string): TDefBlockCommand;
+begin
+  Result:=dbcNone ;
+  if line.Trim().IndexOf('''$IFDEF')=0 then begin
+    Result:=dbcDefine ;
+    defname:=line.Replace('''$IFDEF','').Trim().ToUpper() ;
+  end;
+  if line.Trim().IndexOf('''$ELSE')=0 then Result:=dbcElse ;
+  if line.Trim().IndexOf('''$ENDIF')=0 then Result:=dbcEnd ;
+end;
+
+function TBasicPreprocessor.SetParamFromPair(const name, value: string): Boolean;
+begin
+  Result:=True ;
+  if name='autonumlines' then autonumlines:=value.ToLower()='true' else
+  if name='startline' then startline:=StrToInt(value) else
+  if name='stepline' then stepline:=StrToInt(value) else
+  if name='define' then AddDefine(value.ToUpper()) else
+  if name='packnames' then packnames:=value.ToLower()='true' else
+  if name='stripspaces' then stripspaces:=value.ToLower()='true' else
+  Result:=False ;
+end;
+
+function TBasicPreprocessor.SetPragma(const name: string): Boolean;
+begin
+  Result:=True ;
+  if name='AUTONUMLINES' then autonumlines:=True else
+  Result:=False ;
 end;
 
 function TBasicPreprocessor.StripCommentFromLine(const line: string): string;
@@ -66,24 +103,7 @@ begin
   Result:=line ;
 end;
 
-procedure TBasicPreprocessor.UpdateParamsByPragmas();
-var s,pragma:string ;
-    lines:TStringList ;
-    newenc:TOptional<TEncoding> ;
-begin
-  lines:=TStringList.Create() ;
-  lines.LoadFromFile(inputfile,TEncoding.GetEncoding(866)) ;
-  for s in lines do
-    if s.Trim().ToUpper().IndexOf('''$PRAGMA:')=0 then begin
-      pragma:=s.Trim().ToUpper().Replace('''$PRAGMA:','').Replace('''','').Trim() ;
-      newenc:=getEncodingByName(pragma) ;
-      if newenc then pragmaenc:=newenc else
-      if pragma='AUTONUMLINES' then autonumlines:=True else
-        raise Exception.Create('Unknown PRAGMA: '+pragma);
-    end ;
-  lines.Free ;
-end;
-
+// Функция основной работы
 function TBasicPreprocessor.getResult(): TOptional<TStringList>;
 var script:TStringList ;
 begin
