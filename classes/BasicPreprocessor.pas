@@ -97,7 +97,7 @@ begin
     if line[i]='"' then instring:=not instring ;
     if not instring then
       if (line[i]='''')or (line.Substring(i-1,3).ToUpper()='REM') then
-        Exit(line.Substring(0,i-2)) ;
+        Exit(line.Substring(0,i-1)) ;
   end;
   Result:=line ;
 end;
