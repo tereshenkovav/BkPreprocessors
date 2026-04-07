@@ -69,8 +69,6 @@ uses SysUtils, Generics.Collections ;
 { TNamePacker }
 
 constructor TNamePacker.Create(Alines: TStringList; str_aliases:string);
-var i,p:Integer ;
-    s:string ;
 begin
   lines:=TStringList.Create() ;
   lines.Assign(Alines) ;
