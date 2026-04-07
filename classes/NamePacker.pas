@@ -9,64 +9,59 @@ type
     lines:TStringList ;
     aliases:TStringList ;
   public
-    constructor Create(Alines:TStringList) ;
+    constructor Create(Alines:TStringList; str_aliases:string) ;
     destructor Destroy; override ;
     function getPackedLines():TStringList ;
   end;
+
+const BASIC_NAME_ALIASES =
+'AUTO=AU'#13#10+
+'DIM=DI'#13#10+
+'PAINT=PA'#13#10+
+'BEEP=BE'#13#10+
+'DRAW=DR'#13#10+
+'POKE=PO'#13#10+
+'BLOAD=BL'#13#10+
+'FOR=FO'#13#10+
+'BSAVE=BS'#13#10+
+'GOSUB=GOS'#13#10+
+'PSET=PS'#13#10+
+'CIRCLE=CI'#13#10+
+'INPUT=IN'#13#10+
+'READ=REA'#13#10+
+'CLEAR=CLE'#13#10+
+'RENUM=REN'#13#10+
+'COLOR=COL'#13#10+
+'LINE=LIN'#13#10+
+'RESTORE=RES'#13#10+
+'CSAVE=CS'#13#10+
+'MONIT=MO'#13#10+
+'RETURN=RET'#13#10+
+'DATA=DA'#13#10+
+'NEXT=NEX'#13#10+
+'STOP=ST'#13#10+
+'DELETE=DEL'#13#10+
+'ELSE GOTO=EL'#13#10+
+'ELSE=EL'#13#10+
+'THEN GOTO=TH'#13#10+
+'THEN=TH'#13#10+
+'STEP=ST'#13#10+
+'OUT=OU'#13#10+
+'PRINT=?'#13#10 ;
 
 implementation
 uses SysUtils, Generics.Collections ;
 
 { TNamePacker }
 
-const NAME_ALIASES =
-'AU(TO)'#13#10+
-'DI(M)'#13#10+
-'PA(INT)'#13#10+
-'BE(EP)'#13#10+
-'DR(AW)'#13#10+
-'PO(KE)'#13#10+
-'BL(OAD)'#13#10+
-'FO(R)'#13#10+
-'BS(AVE)'#13#10+
-'GOS(UB)'#13#10+
-'PS(ET)'#13#10+
-'CI(RCLE)'#13#10+
-'IN(PUT)'#13#10+
-'REA(D)'#13#10+
-'CLE(AR)'#13#10+
-'REN(UM)'#13#10+
-'COL(OR)'#13#10+
-'LIN(E)'#13#10+
-'RES(TORE)'#13#10+
-'CS(AVE)'#13#10+
-'MO(NIT)'#13#10+
-'RET(URN)'#13#10+
-'DA(TA)'#13#10+
-'NEX(T)'#13#10+
-'ST(OP)'#13#10+
-'DEL(ETE)'#13#10+
-'EL(SE GOTO)'#13#10+
-'EL(SE)'#13#10+
-'TH(EN GOTO)'#13#10+
-'TH(EN)'#13#10+
-'ST(EP)'#13#10+
-'OU(T)' ;
-
-constructor TNamePacker.Create(Alines: TStringList);
+constructor TNamePacker.Create(Alines: TStringList; str_aliases:string);
 var i,p:Integer ;
     s:string ;
 begin
   lines:=TStringList.Create() ;
   lines.Assign(Alines) ;
   aliases:=TStringList.Create() ;
-  aliases.Text:=NAME_ALIASES ;
-  for i := 0 to aliases.Count-1 do begin
-    s:=aliases[i] ;
-    p:=s.IndexOf('(') ;
-    aliases[i]:=s.Replace('(','').Replace(')','')+'='+s.Substring(0,p);
-  end;
-  aliases.Add('PRINT=?') ;
+  aliases.Text:=str_aliases ;
 end;
 
 destructor TNamePacker.Destroy;

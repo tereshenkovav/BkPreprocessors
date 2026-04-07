@@ -124,7 +124,7 @@ begin
 
   // Обязательно после автонумерации
   if packnames then
-    with TNamePacker.Create(script) do begin
+    with TNamePacker.Create(script,BASIC_NAME_ALIASES) do begin
       script.Free ;
       script:=getPackedLines() ;
       Free ;
