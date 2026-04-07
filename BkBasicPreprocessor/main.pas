@@ -22,8 +22,8 @@ const MAINHELP = 'Preprocessor for BK-0010 Basic'#13#10+
   '/startline=num - set initial num for autonumlines (default 10)'#13#10+
   '/stepline=num - set step for autonumlines (default 10)'#13#10+
   '/packnames=true|false - use short aliases for BASIC operators'#13#10+
-  '/stripspaces=true|false - strip all space char, except string constants' ;
-
+  '/stripspaces=true|false - strip all space char, except string constants'#13#10+
+  '/origcodepage=true|false - save output file in input codepage (by default, output saved in KOI8R)';
 
 procedure TMain.Run() ;
 var basic:TBasicPreprocessor ;
@@ -45,7 +45,7 @@ begin
     if not res.IsOk then raise Exception.Create('Preprocessor error: '+basic.getErrMsg()) ;
 
     res.Value.WriteBOM:=False ;
-    res.Value.SaveToFile(ParamStr(2),basic.getEncoding()) ;
+    res.Value.SaveToFile(ParamStr(2),basic.getOutputEncoding()) ;
     res.Value.Free ;
 
     basic.Free ;

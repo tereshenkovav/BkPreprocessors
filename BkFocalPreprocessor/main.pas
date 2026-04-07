@@ -16,9 +16,10 @@ const MAINHELP = 'Preprocessor for BK-0010 Focal'#13#10+
   'Version: '+TGitVersion.TAG+#13#10+
   'Usage: input_file output_file [parameters]'#13#10+
   'Parameters:'#13#10+
-  '/codepage='+NAME_UTF8+'|'+NAME_WIN1251+'|'+NAME_KOI8R+'|'+NAME_OEM866+' - input and output codepage'#13#10+
+  '/codepage='+NAME_UTF8+'|'+NAME_WIN1251+'|'+NAME_KOI8R+'|'+NAME_OEM866+' - input codepage'#13#10+
   '/define=name - set name for ''$IFDEF directive'#13#10+
-  '/packnames=true|false - use short aliases for FOCAL operators' ;
+  '/packnames=true|false - use short aliases for FOCAL operators'#13#10+
+  '/origcodepage=true|false - save output file in input codepage (by default, output saved in KOI8R)';
 
 procedure TMain.Run() ;
 var focal:TFocalPreprocessor ;
@@ -40,7 +41,7 @@ begin
     if not res.IsOk then raise Exception.Create('Preprocessor error: '+focal.getErrMsg()) ;
 
     res.Value.WriteBOM:=False ;
-    res.Value.SaveToFile(ParamStr(2),focal.getEncoding()) ;
+    res.Value.SaveToFile(ParamStr(2),focal.getOutputEncoding()) ;
     res.Value.Free ;
 
     focal.Free ;
