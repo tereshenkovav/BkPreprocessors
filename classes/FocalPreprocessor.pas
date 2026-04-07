@@ -6,7 +6,6 @@ uses Classes, SysUtils, Optional, AbstractPreprocessor ;
 type
   TFocalPreprocessor = class(TAbstractPreprocessor)
   private
-    packnames:Boolean ;
   protected
     function SetParamFromPair(const name:string; const value:string):Boolean ; override ;
     function SetPragma(const name:string):Boolean; override ;
@@ -27,7 +26,6 @@ uses SourceEncodings, NamePacker ;
 constructor TFocalPreprocessor.Create(const Ainputfile: string);
 begin
   inherited Create(Ainputfile) ;
-  packnames:=False ;
 end;
 
 // Переопределения настроек конкретного препроцессора
@@ -66,8 +64,7 @@ end;
 
 function TFocalPreprocessor.SetParamFromPair(const name, value: string): Boolean;
 begin
-  Result:=True ;
-  if name='packnames' then packnames:=value.ToLower()='true' else
+  // В Фокале нет дополнительных параметров
   Result:=False ;
 end;
 

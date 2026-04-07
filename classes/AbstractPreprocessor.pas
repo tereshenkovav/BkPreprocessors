@@ -13,6 +13,7 @@ type
     errmsg:string ;
     pragmaenc,paramenc:TOptional<TEncoding> ;
     deflist:TStringList ;
+    packnames:Boolean ;
     function LoadSourceFile(const filename: string; srcenc:TEncoding): TStringList;
     procedure ProcessPragmasAndComments(script:TStringList) ;
     procedure UpdateParamsByPragmas() ;
@@ -41,6 +42,7 @@ uses SourceEncodings, LineNumerator, NamePacker, SpaceStripper ;
 constructor TAbstractPreprocessor.Create(const Ainputfile: string);
 begin
   inputfile:=Ainputfile ;
+  packnames:=False ;
   pragmaenc:=TOptional<TEncoding>.NullOptional ;
   paramenc:=TOptional<TEncoding>.NullOptional ;
   deflist:=TStringList.Create() ;
@@ -88,6 +90,7 @@ begin
     end
     else
     if pairs.Names[i]='define' then AddDefine(pairs.ValueFromIndex[i].ToUpper()) else
+    if pairs.Names[i]='packnames' then packnames:=pairs.ValueFromIndex[i].ToLower()='true' else
     // потом вызов настроки уникальных параметров для конкретного препроцессора
     if not SetParamFromPair(pairs.Names[i],pairs.ValueFromIndex[i]) then
       raise Exception.Create('Unknown parameter: '+pairs.Names[i]) ;

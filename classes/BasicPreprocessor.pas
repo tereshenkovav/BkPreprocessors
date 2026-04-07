@@ -7,7 +7,6 @@ type
   TBasicPreprocessor = class(TAbstractPreprocessor)
   private
     autonumlines:Boolean ;
-    packnames:Boolean ;
     stripspaces:Boolean ;
     startline,stepline:Integer ;
   protected
@@ -31,7 +30,6 @@ constructor TBasicPreprocessor.Create(const Ainputfile: string);
 begin
   inherited Create(Ainputfile) ;
   autonumlines:=False ;
-  packnames:=False ;
   startline:=10 ;
   stepline:=10 ;
 end;
@@ -76,7 +74,6 @@ begin
   if name='autonumlines' then autonumlines:=value.ToLower()='true' else
   if name='startline' then startline:=StrToInt(value) else
   if name='stepline' then stepline:=StrToInt(value) else
-  if name='packnames' then packnames:=value.ToLower()='true' else
   if name='stripspaces' then stripspaces:=value.ToLower()='true' else
   Result:=False ;
 end;
