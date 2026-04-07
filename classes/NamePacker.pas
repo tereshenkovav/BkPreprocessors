@@ -47,7 +47,21 @@ const BASIC_NAME_ALIASES =
 'THEN=TH'#13#10+
 'STEP=ST'#13#10+
 'OUT=OU'#13#10+
-'PRINT=?'#13#10 ;
+'PRINT=?' ;
+
+FOCAL_NAME_ALIASES=
+'ASK=A'#13#10+
+'COMMENT=C'#13#10+
+'DO=D'#13#10+
+'ERASE=E'#13#10+
+'SET=S'#13#10+
+'XECUTE=X'#13#10+
+'FOR=F'#13#10+
+'IF=I'#13#10+
+'GOTO=G'#13#10+
+'QUIT=Q'#13#10+
+'RETURN=R'#13#10+
+'TYPE=T' ;
 
 implementation
 uses SysUtils, Generics.Collections ;

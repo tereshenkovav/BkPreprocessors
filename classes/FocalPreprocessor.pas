@@ -20,7 +20,7 @@ type
   end;
 
 implementation
-uses SourceEncodings ;
+uses SourceEncodings, NamePacker ;
 
 { TFocalPreprocessor }
 
@@ -103,6 +103,13 @@ begin
 
   // Обработка условных директив и удаление комментариев
   ProcessPragmasAndComments(script) ;
+
+  if packnames then
+    with TNamePacker.Create(script,FOCAL_NAME_ALIASES) do begin
+      script.Free ;
+      script:=getPackedLines() ;
+      Free ;
+    end;
 
   Result:=script ;
   except
