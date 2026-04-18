@@ -8,6 +8,7 @@ type
   private
     lines:TStringList ;
     aliases:TStringList ;
+    function isLineDataOperator(const str:string):Boolean ;
   public
     constructor Create(Alines:TStringList; str_aliases:string) ;
     destructor Destroy; override ;
@@ -87,10 +88,12 @@ function TNamePacker.getPackedLines: TStringList;
 var s,str:string ;
     i,p:Integer ;
     instring,replaced:Boolean ;
-label NextStep ;
+    isdata:Boolean ;
+label NextStep, FinWork ;
 begin
   Result:=TStringList.Create ;
   for s in lines do begin
+    isdata:=isLineDataOperator(s) ;
     str:=s ;
     repeat
       instring:=False ;
@@ -103,13 +106,24 @@ begin
             str:=str.Substring(0,p)+aliases.ValueFromIndex[i]+
               str.Substring(p+aliases.Names[i].Length) ;
             replaced:=True ;
-            goto NextStep ;
+            // Если это строка DATA, то нужно сократить только первый оператор и выходить
+            if isdata then goto FinWork else goto NextStep ;
           end;
       end ;
 NextStep:
     until not replaced;
+FinWork:
     Result.Add(str) ;
   end ;
+end;
+
+function TNamePacker.isLineDataOperator(const str: string): Boolean;
+var p:Integer ;
+begin
+  Result:=False ;
+  for p := 1 to str.Length do
+    if (str[p]>'9')and(str[p]<>' ') then
+      if Str.Substring(p-1,2)='DA' then Exit(True) else Exit(False) ;
 end;
 
 end.
